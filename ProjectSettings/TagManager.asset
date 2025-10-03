@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - Glue
+  - Right Hand
+  - Left Hand
   layers:
   - Default
   - TransparentFX
