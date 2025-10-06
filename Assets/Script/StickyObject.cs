@@ -8,58 +8,38 @@ public class StickyObject : MonoBehaviour
     private FixedJoint currentJoint;
 
     [Header("Configurações do Post-it")]
-    public int noteID;          // ID do post-it
+    public int[] noteIDs;
     public bool isSticky = false;
-    public int timerToReturn;   // segundos para voltar à posição inicial
+    public int timerToReturn;
 
     private XRGrabInteractable grabInteractable;
-    private GlueBoard currentBoard; // referência ao quadro colado
+    private GlueBoard currentBoard;
 
-    // Posição inicial na mesa
     private Vector3 initialPosition;
     private Quaternion initialRotation;
+    private Vector3 originalScale;
 
-    // Controle de retorno automático
     private float lostTimer = 0f;
     private bool isGrabbed = false;
 
-    // Último interactor que segurou o post-it (para vibrar o controle certo)
-    private XRBaseControllerInteractor lastInteractor;
-
-    [Header("Feedback Haptics")]
-    [Range(0f, 1f)] public float hapticIntensity = 0.5f;
-    public float hapticDuration = 0.2f;
-
-    [Header("Feedback Visual")]
-    public float popScaleMultiplier = 1.5f;
-    public float popDuration = 0.2f;
-    private Vector3 originalScale;
-    private Coroutine popCoroutine;
-
-    [Header("Feedback Sonoro")]
+    [Header("Feedbacks")]
     public AudioSource audioSource;
     public AudioClip stickSound;
-
-    [Header("Feedback Cor")]
+    public Material normalMaterial;
     public Material highlightMaterial;
-    private Material originalMaterial;
-    private MeshRenderer meshRenderer;
+    public MeshRenderer meshRenderer;
+    public float timeToWaitFeedback = 0.5f; // Tempo de espera do feedback terminar antes de liberar interação
+
+    private bool canBeGrabbedAgain = true;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         grabInteractable = GetComponent<XRGrabInteractable>();
 
-        // Salva posição inicial
         initialPosition = transform.position;
         initialRotation = transform.rotation;
         originalScale = transform.localScale;
-
-        meshRenderer = GetComponent<MeshRenderer>();
-        if (meshRenderer != null)
-        {
-            originalMaterial = meshRenderer.material;
-        }
 
         if (grabInteractable != null)
         {
@@ -70,14 +50,18 @@ public class StickyObject : MonoBehaviour
 
     private void Update()
     {
+        // Se o jogo estiver travado, não executa nada
+        if (GameManager.Instance != null && GameManager.Instance.interactionLocked)
+            return;
+
+        if (transform.localScale != originalScale)
+            transform.localScale = originalScale;
+
         if (!isGrabbed && !isSticky)
         {
             lostTimer += Time.deltaTime;
-
             if (lostTimer >= timerToReturn)
-            {
                 ReturnToInitialPosition();
-            }
         }
         else
         {
@@ -85,9 +69,14 @@ public class StickyObject : MonoBehaviour
         }
     }
 
+
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Glue") && currentJoint == null)
+        if (GameManager.Instance != null && GameManager.Instance.interactionLocked)
+            return;
+
+        if (collision.gameObject.CompareTag("Glue") && currentJoint == null && canBeGrabbedAgain)
         {
             GlueBoard board = collision.gameObject.GetComponent<GlueBoard>();
             if (board == null) return;
@@ -97,18 +86,20 @@ public class StickyObject : MonoBehaviour
 
             isSticky = true;
             rb.useGravity = false;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
 
+            // Corrige profundidade
             ContactPoint contact = collision.contacts[0];
             Vector3 normal = contact.normal;
             float halfDepth = transform.localScale.z / 2f;
-
             Vector3 correctedPos = transform.position;
             float distToSurface = Vector3.Dot((transform.position - contact.point), normal);
             correctedPos -= normal * distToSurface;
             correctedPos += normal * halfDepth;
-
             transform.position = correctedPos;
 
+            // Cria o joint
             currentJoint = gameObject.AddComponent<FixedJoint>();
             currentJoint.connectedBody = collision.rigidbody;
             currentJoint.breakForce = Mathf.Infinity;
@@ -117,16 +108,82 @@ public class StickyObject : MonoBehaviour
             currentBoard = board;
             board.AddPostIt(this);
 
-            StartCoroutine(DelayedFeedback());
+            // Inicia feedback e bloqueia interação
+            StartCoroutine(FeedbackColado());
         }
+    }
+
+    private IEnumerator FeedbackColado()
+    {
+        // Desabilita interação temporariamente
+        if (grabInteractable != null)
+            grabInteractable.enabled = false;
+
+        canBeGrabbedAgain = false;
+
+        yield return new WaitForSeconds(0.05f);
+
+        // Vibração
+        if (grabInteractable.firstInteractorSelecting is XRBaseControllerInteractor controllerInteractor)
+            controllerInteractor.SendHapticImpulse(0.3f, 0.2f);
+
+        // Troca de material
+        if (meshRenderer != null && highlightMaterial != null)
+        {
+            meshRenderer.material = highlightMaterial;
+            yield return new WaitForSeconds(0.2f);
+            meshRenderer.material = normalMaterial;
+        }
+
+        // Som
+        if (audioSource != null && stickSound != null)
+            audioSource.PlayOneShot(stickSound);
+
+        // Animação de escala (pulsar)
+        yield return StartCoroutine(ScalePulse(1.5f, 0.1f));
+
+        // Espera o feedback terminar antes de liberar interação
+        yield return new WaitForSeconds(timeToWaitFeedback);
+
+        if (grabInteractable != null)
+            grabInteractable.enabled = true;
+
+        canBeGrabbedAgain = true;
+    }
+
+    private IEnumerator ScalePulse(float multiplier, float duration)
+    {
+        Vector3 startScale = originalScale;
+        Vector3 targetScale = originalScale * multiplier;
+        float t = 0f;
+
+        while (t < duration)
+        {
+            transform.localScale = Vector3.Lerp(startScale, targetScale, t / duration);
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.localScale = targetScale;
+
+        t = 0f;
+        while (t < duration)
+        {
+            transform.localScale = Vector3.Lerp(targetScale, startScale, t / duration);
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.localScale = startScale;
     }
 
     private void OnCollisionExit(Collision collision)
     {
+        if (GameManager.Instance != null && GameManager.Instance.interactionLocked)
+            return;
+
         if (collision.gameObject.CompareTag("Glue") && currentBoard != null)
-        {
             ReleaseFromBoard();
-        }
     }
 
     private void ReleaseFromBoard()
@@ -145,21 +202,31 @@ public class StickyObject : MonoBehaviour
             currentBoard.RemovePostIt(this);
             currentBoard = null;
         }
+
+        transform.localScale = originalScale;
     }
 
     private void OnGrabbed(SelectEnterEventArgs args)
     {
+        if (GameManager.Instance != null && GameManager.Instance.interactionLocked)
+            return;
+
+        if (!canBeGrabbedAgain)
+        {
+            args.interactorObject.transform.GetComponent<XRBaseControllerInteractor>()?.SendHapticImpulse(0.2f, 0.1f);
+            return;
+        }
+
         isGrabbed = true;
         lostTimer = 0f;
-
-        if (args.interactorObject is XRBaseControllerInteractor controllerInteractor)
-        {
-            lastInteractor = controllerInteractor;
-        }
     }
+
 
     private void OnReleased(SelectExitEventArgs args)
     {
+        if (GameManager.Instance != null && GameManager.Instance.interactionLocked)
+            return;
+
         isGrabbed = false;
         ReleaseFromBoard();
     }
@@ -168,84 +235,9 @@ public class StickyObject : MonoBehaviour
     {
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-
         transform.position = initialPosition;
         transform.rotation = initialRotation;
-
-        lostTimer = 0f;
-    }
-
-    private IEnumerator DelayedFeedback()
-    {
-        yield return new WaitForEndOfFrame();
-
-        PlayHapticFeedback();
-        PlayPopEffect();
-        PlaySoundFeedback();
-        PlayColorFeedback();
-    }
-
-    private void PlayHapticFeedback()
-    {
-        if (lastInteractor != null && lastInteractor.xrController != null)
-        {
-            lastInteractor.xrController.SendHapticImpulse(hapticIntensity, hapticDuration);
-        }
-    }
-
-    private void PlayPopEffect()
-    {
-        if (popCoroutine != null)
-            StopCoroutine(popCoroutine);
-
-        popCoroutine = StartCoroutine(PopRoutine());
-    }
-
-    private IEnumerator PopRoutine()
-    {
-        Vector3 targetScale = originalScale * popScaleMultiplier;
-        float halfDuration = popDuration / 2f;
-        float t = 0f;
-
-        while (t < halfDuration)
-        {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(originalScale, targetScale, t / halfDuration);
-            yield return null;
-        }
-
-        t = 0f;
-        while (t < halfDuration)
-        {
-            t += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(targetScale, originalScale, t / halfDuration);
-            yield return null;
-        }
-
         transform.localScale = originalScale;
-        popCoroutine = null;
-    }
-
-    private void PlaySoundFeedback()
-    {
-        if (audioSource != null && stickSound != null)
-        {
-            audioSource.PlayOneShot(stickSound);
-        }
-    }
-
-    private void PlayColorFeedback()
-    {
-        if (meshRenderer != null && highlightMaterial != null)
-        {
-            StartCoroutine(ColorFlashRoutine());
-        }
-    }
-
-    private IEnumerator ColorFlashRoutine()
-    {
-        meshRenderer.material = highlightMaterial;
-        yield return new WaitForSeconds(0.3f);
-        meshRenderer.material = originalMaterial;
+        lostTimer = 0f;
     }
 }
