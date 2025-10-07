@@ -100,9 +100,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dee6ddaa14b34f4095d1aab6ea79e88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  noteID: 2
+  noteIDs: 
   isSticky: 0
-  timerToReturn: 5
+  timerToReturn: 10
+  returnDistanceThreshold: 0.05
   audioSource: {fileID: 0}
   stickSound: {fileID: 8300000, guid: 52b4d820d403933428ba8449bf1b409b, type: 3}
   normalMaterial: {fileID: 2100000, guid: 54db342a8e5d0884ea4ead00bacfdf37, type: 2}

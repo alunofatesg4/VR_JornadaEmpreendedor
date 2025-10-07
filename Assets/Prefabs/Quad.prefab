@@ -257,9 +257,10 @@ MonoBehaviour:
   boardID: 0
   maxPostIts: 1
   avisoUI: {fileID: 7901968462374048168}
-  avisoDuration: 2.5
+  avisoDuration: 5
   audioSource: {fileID: 0}
   avisoSom: {fileID: 8300000, guid: 16fba6d30ed741d4a9fdd6e79ee2f3ac, type: 3}
+  objetoParaDesativar: {fileID: 0}
 --- !u!1 &6492305042902970371
 GameObject:
   m_ObjectHideFlags: 0
