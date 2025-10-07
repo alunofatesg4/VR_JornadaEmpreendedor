@@ -15,6 +15,7 @@ public class StickyObject : MonoBehaviour
 
     private XRGrabInteractable grabInteractable;
     private GlueBoard currentBoard;
+    private XRBaseControllerInteractor lastInteractor; // Guarda o último interactor usado
 
     private Vector3 initialPosition;
     private Quaternion initialRotation;
@@ -51,7 +52,6 @@ public class StickyObject : MonoBehaviour
 
     private void Update()
     {
-        // pausa se interação bloqueada
         if (GameManager.Instance != null && GameManager.Instance.interactionLocked)
             return;
 
@@ -60,7 +60,6 @@ public class StickyObject : MonoBehaviour
 
         if (!isGrabbed && !isSticky)
         {
-            // Só começa a contar o tempo se o post-it estiver distante do ponto original
             if (Vector3.Distance(transform.position, initialPosition) > returnDistanceThreshold)
             {
                 lostTimer += Time.deltaTime;
@@ -69,7 +68,7 @@ public class StickyObject : MonoBehaviour
             }
             else
             {
-                lostTimer = 0f; // Está perto, então reseta o contador
+                lostTimer = 0f;
             }
         }
         else
@@ -106,6 +105,10 @@ public class StickyObject : MonoBehaviour
             correctedPos += normal * halfDepth;
             transform.position = correctedPos;
 
+            // Força rotação X=0, Y=180, mantém o Z atual
+            Vector3 currentEuler = transform.eulerAngles;
+            transform.rotation = Quaternion.Euler(0f, 180f, currentEuler.z);
+
             // Cria o joint
             currentJoint = gameObject.AddComponent<FixedJoint>();
             currentJoint.connectedBody = collision.rigidbody;
@@ -115,13 +118,17 @@ public class StickyObject : MonoBehaviour
             currentBoard = board;
             board.AddPostIt(this);
 
+            // Vibração imediata ao colar (usa o último interactor)
+            if (lastInteractor != null)
+                lastInteractor.SendHapticImpulse(0.4f, 0.25f);
+
+            // Inicia feedback visual/sonoro
             StartCoroutine(FeedbackColado());
         }
     }
 
     private IEnumerator FeedbackColado()
     {
-        // Desativa interação temporariamente
         if (grabInteractable != null)
             grabInteractable.enabled = false;
 
@@ -129,17 +136,7 @@ public class StickyObject : MonoBehaviour
 
         yield return new WaitForSeconds(0.05f);
 
-        //Vibração com segurança — procura o interactor ativo
-        XRBaseControllerInteractor controllerInteractor = null;
-        if (grabInteractable != null && grabInteractable.interactorsSelecting.Count > 0)
-        {
-            controllerInteractor = grabInteractable.interactorsSelecting[0] as XRBaseControllerInteractor;
-        }
-
-        if (controllerInteractor != null)
-            controllerInteractor.SendHapticImpulse(0.4f, 0.25f);
-
-        // Troca de material
+        // Troca de material (feedback visual)
         if (meshRenderer != null && highlightMaterial != null)
         {
             meshRenderer.material = highlightMaterial;
@@ -154,7 +151,6 @@ public class StickyObject : MonoBehaviour
         // Escala de feedback
         yield return StartCoroutine(ScalePulse(1.5f, 0.1f));
 
-        // Espera feedback antes de liberar interação
         yield return new WaitForSeconds(timeToWaitFeedback);
 
         if (grabInteractable != null)
@@ -231,6 +227,9 @@ public class StickyObject : MonoBehaviour
 
         isGrabbed = true;
         lostTimer = 0f;
+
+        // Guarda o interactor ativo
+        lastInteractor = args.interactorObject as XRBaseControllerInteractor;
     }
 
     private void OnReleased(SelectExitEventArgs args)
@@ -239,6 +238,10 @@ public class StickyObject : MonoBehaviour
             return;
 
         isGrabbed = false;
+
+        // Guarda o último interactor antes de perder a referência
+        lastInteractor = args.interactorObject as XRBaseControllerInteractor;
+
         ReleaseFromBoard();
     }
 
