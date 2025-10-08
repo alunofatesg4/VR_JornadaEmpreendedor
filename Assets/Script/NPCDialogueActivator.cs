@@ -115,7 +115,7 @@ public class NPCDialogueActivator : MonoBehaviour
             }));
         }
 
-        // Faz o NPC olhar para o jogador se estiver falando
+        // NPC olha para o jogador quando estiver falando
         if (audioSource != null && audioSource.isPlaying)
         {
             Vector3 lookPos = new Vector3(player.position.x, transform.position.y, player.position.z);

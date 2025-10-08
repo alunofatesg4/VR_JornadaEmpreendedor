@@ -22,9 +22,6 @@ public class VRScreenFade : MonoBehaviour
         Color color = fadeMaterial.color;
         color.a = 0f;
         fadeMaterial.color = color;
-
-        // Inicia o processo automático (ou pode ser chamado manualmente)
-        //StartCoroutine(FadeAndQuitRoutine());
     }
 
     public IEnumerator FadeAndQuitRoutine()

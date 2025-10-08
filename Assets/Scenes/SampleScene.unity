@@ -1507,13 +1507,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 225140927}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7793819, z: -0, w: 0.62654924}
+  m_LocalRotation: {x: -0, y: -0.7640896, z: -0, w: 0.64511025}
   m_LocalPosition: {x: 0.364, y: 0, z: -3.052}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 425544472}
-  m_LocalEulerAnglesHint: {x: 0, y: -102.408, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -99.652, z: 0}
 --- !u!1001 &227582988
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10157,7 +10157,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 5bf4583f020c870408daa04d5eca51c0, type: 3}
   - {fileID: 2800000, guid: 035e32635d5e28642ada6fc2f45ea9eb, type: 3}
   - {fileID: 2800000, guid: 5d731d6983fb6a048ace9549bc36f79d, type: 3}
-  delay: 5
+  delay: 10
 --- !u!1001 &916863940
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17935,6 +17935,42 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 1915111419}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1868915250}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 493674067}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1427598618
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19271,7 +19307,7 @@ MonoBehaviour:
   firstDialogueRange: 2.5
   thirdDialogueRange: 2
   fifthDialogueRange: 2
-  tvDialogueRange: 1.5
+  tvDialogueRange: 2
   firstDialogueClips:
   - {fileID: 8300000, guid: f03c2bc32ca126743af7c1275d55ab41, type: 3}
   secondDialogueClips:
@@ -23093,7 +23129,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2336b34d620b5ff4eae6ba968aa488ad, type: 2}
+  - {fileID: 2100000, guid: 6e3f430202159284584fb1496c3edb7d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -29545,7 +29581,7 @@ Transform:
   m_GameObject: {fileID: 2102852693}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.912, y: 1, z: -4.838}
+  m_LocalPosition: {x: -3.03, y: 1, z: -2.42}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

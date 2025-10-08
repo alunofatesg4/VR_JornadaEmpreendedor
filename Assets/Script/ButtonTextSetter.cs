@@ -10,7 +10,6 @@ public class ButtonTextSetter : MonoBehaviour
     [Header("Texto que este botão define")]
     public string textoDefinido;
 
-    // Chame este método no OnClick do botão
     public void SetTexto()
     {
         if (targetText != null)

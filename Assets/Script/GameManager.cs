@@ -80,8 +80,6 @@ public class GameManager : MonoBehaviour
 
         int finalScore = totalScore;
         Debug.Log($"Jogo concluído! Pontuação final: {finalScore}");
-
-        // TODO: Salvar o finalScore aqui
     }
 
     // Quando o jogador cancela
