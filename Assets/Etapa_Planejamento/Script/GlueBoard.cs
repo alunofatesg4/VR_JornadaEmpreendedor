@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro; // necessário para usar TextMeshProUGUI
 
 public class GlueBoard : MonoBehaviour
 {
@@ -19,6 +20,9 @@ public class GlueBoard : MonoBehaviour
     [Header("Botão de voltar que será desativado quando um post-it for colado")]
     public GameObject objetoParaDesativar;
 
+    [Header("UI de Contador (Ex: 0/3)")]
+    public TextMeshProUGUI contadorTMP; // arraste o TextMeshPro aqui no Inspector
+
     private List<StickyObject> postIts = new List<StickyObject>();
     private Coroutine avisoRoutine;
     private Vector3 avisoEscalaOriginal;
@@ -30,6 +34,8 @@ public class GlueBoard : MonoBehaviour
             avisoUI.SetActive(false);
             avisoEscalaOriginal = avisoUI.transform.localScale;
         }
+
+        AtualizarContador();
     }
 
     public bool CanAcceptPostIt(StickyObject postIt)
@@ -55,6 +61,9 @@ public class GlueBoard : MonoBehaviour
             postIts.Add(postIt);
             GameManager.Instance.UpdateScore();
 
+            // Atualiza contador de post-its
+            AtualizarContador();
+
             // Desativa o botão vinculado assim que o primeiro post-it for colado
             if (objetoParaDesativar != null && objetoParaDesativar.activeSelf)
             {
@@ -69,6 +78,17 @@ public class GlueBoard : MonoBehaviour
         {
             postIts.Remove(postIt);
             GameManager.Instance.UpdateScore();
+
+            // Atualiza contador de post-its
+            AtualizarContador();
+        }
+    }
+
+    private void AtualizarContador()
+    {
+        if (contadorTMP != null)
+        {
+            contadorTMP.text = $"{postIts.Count}/{maxPostIts}";
         }
     }
 
@@ -82,7 +102,6 @@ public class GlueBoard : MonoBehaviour
 
         foreach (var p in postIts)
         {
-            // Verifica se o post-it possui o boardID na sua lista de IDs
             bool match = false;
             foreach (var id in p.noteIDs)
             {
@@ -95,7 +114,6 @@ public class GlueBoard : MonoBehaviour
 
             if (match)
             {
-                // Mantém a lógica anterior de pontuação
                 if (maxPostIts == 1)
                     points += 25;
                 else
@@ -105,7 +123,6 @@ public class GlueBoard : MonoBehaviour
 
         return points;
     }
-
 
     // Mostra o aviso visual
     private void MostrarAviso()
@@ -139,7 +156,6 @@ public class GlueBoard : MonoBehaviour
         Vector3 alvo = avisoEscalaOriginal * escalaMax;
         float tempo = 0f;
 
-        // Cresce
         while (tempo < duracao)
         {
             avisoUI.transform.localScale = Vector3.Lerp(avisoEscalaOriginal, alvo, tempo / duracao);
@@ -148,7 +164,6 @@ public class GlueBoard : MonoBehaviour
         }
         avisoUI.transform.localScale = alvo;
 
-        // Volta
         tempo = 0f;
         while (tempo < duracao)
         {
